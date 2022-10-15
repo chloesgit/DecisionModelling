@@ -1,6 +1,8 @@
+from urllib.parse import DefragResult
 import pandas as pd
 import math
 from scipy import stats
+import random
 
 
 def critiques(excelFile):
@@ -136,8 +138,9 @@ def sim_distanceCosine(pers1, pers2):
             num += pers1[movie]*pers2[movie]
             sqx += pers1[movie]*pers1[movie]
             sqy += pers2[movie]*pers2[movie]
-    dist = num/(math.sqrt(sqx)+math.sqrt(sqy))
-    return dist
+    if sqx == 0 and sqy == 0:
+        return 0
+    return num/(math.sqrt(sqx)+math.sqrt(sqy))
 
 
 def PearsonRecommend(dico, user, ListMovies):
@@ -233,3 +236,96 @@ def compare(user, List, ListObject):
 
 compare('Veronica', Songs, ListSongs)
 compare('Anne', Critiques, ListMovies)
+
+
+# def createCritics(Users, Movies):
+#     res = {}
+#     empty_cells = 0
+#     M, N = len(Movies), len(Users)
+#     for user in Users:
+#         nbVotes = random.randint(1, M)
+#         empty_cells += M-nbVotes
+#         unvotedMovies = list(Movies)
+#         votes = {}
+#         for i in range(nbVotes):
+#             index_movie_to_vote = random.randint(0, len(unvotedMovies)-1)
+#             votes[unvotedMovies[index_movie_to_vote]] = random.randint(1, 5)
+#             unvotedMovies.pop(index_movie_to_vote)
+#         res[user] = votes
+#     return res, empty_cells/(M*N)
+
+
+def createCritics(nbCritiques, nbMovies):
+    critiques = {}
+    size = nbCritiques*nbMovies
+    coeff = random.randint(30, 50)/100
+    nbZero = 0
+    for i in range(nbCritiques):
+        critiques["critique "+str(i)] = {}
+        for j in range(nbMovies):
+            critiques["critique "+str(i)]["movie " +
+                                          str(j)] = random.randint(1, 10)/2
+    while nbZero <= size*coeff:
+        i = random.randint(0, nbMovies-1)
+        j = random.randint(0, nbCritiques-1)
+        key1 = "critique "+str(j)
+        key2 = "movie "+str(i)
+        if key1 in critiques.keys():
+            if key2 in critiques[key1].keys() and len(critiques[key1].keys()) > 2:
+                del critiques[key1][key2]
+                nbZero += 1
+    return critiques
+
+
+def recommandationNearestNeighbor(user, critiques):
+    recommandation = recommendNearestNeighbor(user, critiques)
+    max = 0
+    movieRecommended = ""
+    for movie in recommandation:
+        if movie[1] > max:
+            max = movie[1]
+            movieRecommended = movie[0]
+    return movieRecommended
+
+
+def allRatingsDifferent():
+    nbCritiques = random.randint(10, 20)
+    nbMovies = random.randint(10, 20)
+    while True:
+        critiques = createCritics(nbCritiques, nbMovies)
+        user = "critique " + str(random.randint(0, len(critiques)-1))
+        ListMovies = ["movie "+str(i) for i in range(nbMovies)]
+        recommendation = []
+        while len(critiques[user].keys()) > nbMovies/2:
+            i = random.randint(0, len(critiques[user])-1)
+            if "movie "+str(i) in critiques[user].keys():
+                del critiques[user]["movie "+str(i)]
+        cosine = CosineRecommend(user, critiques, ListMovies)
+        recommendation.append(cosine)
+        pearson = PearsonRecommend(critiques, user, ListMovies)
+        recommendation.append(pearson)
+        if recommendation[0] == recommendation[1]:
+            continue
+        bestrecommendexp = BestrecommendExp(user, critiques, ListMovies)
+        recommendation.append(bestrecommendexp)
+        if recommendation[0] == recommendation[2] or recommendation[1] == recommendation[2]:
+            continue
+        bestrecommend = Bestrecommend(user, critiques, ListMovies)
+        recommendation.append(bestrecommend)
+        if recommendation[0] == recommendation[3] or recommendation[1] == recommendation[3] or recommendation[2] == recommendation[3]:
+            continue
+        nearestneighbor = recommandationNearestNeighbor(user, critiques)
+        recommendation.append(nearestneighbor)
+        if recommendation[0] == recommendation[4] or recommendation[1] == recommendation[4] or recommendation[2] == recommendation[4] or recommendation[3] == recommendation[4]:
+            continue
+        print("Pearson : ", pearson)
+        print("Cosine : ", cosine)
+        print("Bestrecommendexp : ", bestrecommendexp)
+        print("Bestrecommend : ", bestrecommend)
+        print("Nearestneighbor : ", nearestneighbor)
+        break
+    return (critiques)
+
+
+print("Liste vérifiant les différentes conditions imposées à la question 4",
+      allRatingsDifferent())
