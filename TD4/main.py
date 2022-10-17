@@ -7,11 +7,9 @@ def convert_excel_to_list(file_name):
     excelFile = pd.read_excel(file_name, header=None)
     excelFile.to_csv("file_to_csv.csv", index=None)
     dataframeObject = pd.DataFrame(pd.read_csv("file_to_csv.csv"))
-    print(dataframeObject)
     list = dataframeObject.values.tolist()
     dico = {}
     for voter in list:
-        print(voter)
         dico[voter[0]] = voter[1:]
     return dico
 
@@ -27,7 +25,6 @@ def MajorityRule(votes):
     counts = {}
     for voter in votes.keys():
         vote = votes[voter]
-        print(vote)
         if vote[0] in counts.keys():
             counts[vote[0]] += 1
         else:
@@ -182,7 +179,6 @@ def allSameWinner():
             Votes), CondorcetVoting(Votes, candidateList), BordaVoting(Votes)]
         if Candidates[2] == "None":
             all_same = False
-        print(Candidates)
         c = Candidates[0]
         for c2 in Candidates[1:]:
             if c2 != c:
